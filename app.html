@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wizard Chess</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      font-family: Georgia, serif;
+      background: radial-gradient(#2b2b2b, #0f0f0f);
+      color: #f5f5f5;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 20px;
+    }
+
+    #status {
+      margin: 10px;
+      font-weight: bold;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(8, 70px);
+      grid-template-rows: repeat(8, 70px);
+      margin: 20px auto;
+      border: 4px solid #caa45c;
+    }
+
+    .square {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 38px;
+      cursor: pointer;
+    }
+
+    .light {
+      background-color: #e6d8b8;
+    }
+
+    .dark {
+      background-color: #6b4f2d;
+    }
+
+    .selected {
+      outline: 4px solid gold;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🧙‍♂️ Wizard Chess</h1>
+<p>Capture the enemy Archmage to win.</p>
+<div id="status">Light Wizards' Turn</div>
+
+<div class="board" id="board"></div>
+
+<button onclick="resetGame()">Restart Game</button>
+
+<p><a href="scratch.html" style="color: lightblue;">← Back to Scratch Page</a></p>
+
+<script>
+  const boardElement = document.getElementById("board");
+  const statusElement = document.getElementById("status");
+
+  let selectedSquare = null;
+  let currentTurn = "light";
+
+  const pieces = {
+    light: {
+      king: "🧙‍♂️",
+      queen: "🪄",
+      rook: "🏰",
+      bishop: "📜",
+      knight: "🐺",
+      pawn: "✨"
+    },
+    dark: {
+      king: "🧙‍♀️",
+      queen: "🔮",
+      rook: "🗼",
+      bishop: "📖",
+      knight: "🐉",
+      pawn: "🌑"
+    }
+  };
+
+  let board = [];
+
+  function resetGame() {
+    currentTurn = "light";
+    selectedSquare = null;
+    statusElement.textContent = "Light Wizards' Turn";
+
+    board = [
+      ["dr","dn","db","dq","dk","db","dn","dr"],
+      ["dp","dp","dp","dp","dp","dp","dp","dp"],
+      ["","","","","","","",""],
+      ["","","","","","","",""],
+      ["","","","","","","",""],
+      ["","","","","","","",""],
+      ["lp","lp","lp","lp","lp","lp","lp","lp"],
+      ["lr","ln","lb","lq","lk","lb","ln","lr"]
+    ];
+
+    renderBoard();
+  }
+
+  function renderBoard() {
+    boardElement.innerHTML = "";
+
+    board.forEach((row, rowIndex) => {
+      row.forEach((piece, colIndex) => {
+        const square = document.createElement("div");
+        const isLight = (rowIndex + colIndex) % 2 === 0;
+
+        square.className = `square ${isLight ? "light" : "dark"}`;
+        square.dataset.row = rowIndex;
+        square.dataset.col = colIndex;
+
+        if (piece) {
+          const team = piece[0] === "l" ? "light" : "dark";
+          const type = getPieceType(piece);
+          square.textContent = pieces[team][type];
+        }
+
+        square.addEventListener("click", () => onSquareClick(rowIndex, colIndex));
+        boardElement.appendChild(square);
+      });
+    });
+  }
+
+  function getPieceType(piece) {
+    return {
+      p: "pawn",
+      r: "rook",
+      n: "knight",
+      b: "bishop",
+      q: "queen",
+      k: "king"
+    }[piece[1]];
+  }
+
+  function onSquareClick(row, col) {
+    const piece = board[row][col];
+
+    if (selectedSquare) {
+      movePiece(selectedSquare, { row, col });
+      selectedSquare = null;
+    } else if (piece && piece[0] === currentTurn[0]) {
+      selectedSquare = { row, col };
+      highlightSquare(row, col);
+    }
+  }
+
+  function movePiece(from, to) {
+    const movingPiece = board[from.row][from.col];
+    const targetPiece = board[to.row][to.col];
+
+    if (targetPiece && targetPiece[1] === "k") {
+      statusElement.textContent = `${currentTurn.toUpperCase()} WINS!`;
+      board[to.row][to.col] = movingPiece;
+      board[from.row][from.col] = "";
+      renderBoard();
+      return;
+    }
+
+    board[to.row][to.col] = movingPiece;
+    board[from.row][from.col] = "";
+
+    currentTurn = currentTurn === "light" ? "dark" : "light";
+    statusElement.textContent =
+      currentTurn === "light" ? "Light Wizards' Turn" : "Dark Wizards' Turn";
+
+    renderBoard();
+  }
+
+  function highlightSquare(row, col) {
+    document.querySelectorAll(".square").forEach(sq => sq.classList.remove("selected"));
+    document.querySelector(
+      `.square[data-row="${row}"][data-col="${col}"]`
+    ).classList.add("selected");
+  }
+
+  resetGame();
+</script>
+
+</body>
+</html>
